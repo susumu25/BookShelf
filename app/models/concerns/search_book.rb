@@ -1,0 +1,29 @@
+module SearchBook
+  extend ActiveSupport::Concern
+  included do
+    scope :search_title, lambda { |keyword|
+      table = Book.arel_table
+      condition = table[:title].matches("%#{keyword}%")
+      where(condition)
+    }
+
+    scope :search_category, lambda { |category_name|
+      table = Category.arel_table
+      condition = table[:name].eq(category_name)
+      where(condition)
+    }
+
+    scope :search, lambda { |s|
+      r = self
+      r = r.search_title(s[:s_title]) if s[:s_title].present?
+      r = r.joins(:categories).search_category(s[:s_category]) if s[:s_category].present?
+      if r != self
+        r
+      else
+        where({})
+      end
+    }
+    
+    
+  end
+end
